@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EMAECSA | Plataforma de Capacitación SSO</title>
+  <meta name="description" content="Plataforma web básica para cursos de Seguridad y Salud Ocupacional (SSO) con login por DNI, evaluación y certificado imprimible." />
+  <style>
+    :root{
+      --bg:#0b1220;         /* azul petróleo oscuro */
+      --bg-2:#10192e;       /* capa intermedia */
+      --paper:#f5f7fb;      /* fondo claro */
+      --ink:#0d1b2a;        /* texto principal */
+      --muted:#5c6b86;      /* texto secundario */
+      --brand:#ffd166;      /* dorado */
+      --brand-2:#f4a261;    /* acento */
+      --ok:#2ecc71;         /* verde */
+      --danger:#e74c3c;     /* rojo */
+      --shadow: 0 10px 30px rgba(6,14,30,.25);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;color:var(--ink);background:linear-gradient(180deg,#0b1220 0%,#10192e 45%,#0b1220 100%);}
+    a{color:inherit}
+    .container{width:min(1100px,92vw);margin-inline:auto}
+    /* Header */
+    header{position:sticky;top:0;backdrop-filter:saturate(180%) blur(10px);background:rgba(15,23,42,.6);border-bottom:1px solid rgba(255,255,255,.08);z-index:10}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:.9rem 0;color:#e6edf7}
+    .logo{display:flex;align-items:center;gap:.7rem;font-weight:700;letter-spacing:.5px}
+    .logo .mark{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#ffe8a3, #ffd166 40%,#f4a261 70%, #a96a20 100%);box-shadow:inset 0 0 12px rgba(0,0,0,.25), 0 6px 16px rgba(0,0,0,.3)}
+    .nav .actions{display:flex;gap:.6rem}
+    .btn{appearance:none;border:0;padding:.8rem 1rem;border-radius:12px;font-weight:600;cursor:pointer;transition:transform .05s ease, box-shadow .2s ease, opacity .2s ease}
+    .btn:active{transform:translateY(1px)}
+    .btn.solid{background:var(--brand);color:#2a1f05;box-shadow:var(--shadow)}
+    .btn.ghost{background:transparent;color:#e6edf7;border:1px solid rgba(255,255,255,.18)}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:center;padding:clamp(1rem,3vw,2rem) 0 2rem}
+    .hero h1{margin:0;font-size:clamp(28px,4vw,44px);line-height:1.1;color:#f8fafc}
+    .hero p{margin:.8rem 0 1.2rem;color:#c9d6f3;max-width:60ch}
+    .hero .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.06) 100%);
+      border:1px solid rgba(255,255,255,.16);color:#e6edf7;padding:1.2rem;border-radius:var(--radius);
+    }
+    .tag{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,209,102,.12);color:#ffe7b0;border:1px dashed rgba(255,209,102,.5);padding:.35rem .6rem;border-radius:999px;font-size:.85rem}
+
+    /* Sections */
+    section{background:var(--paper);border-top-left-radius:28px;border-top-right-radius:28px;padding:2rem 0 3rem}
+    section .title{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem}
+    h2{margin:0 0 1rem;font-size:clamp(22px,3vw,30px)}
+    .muted{color:var(--muted)}
+
+    /* Cards grid */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .card{background:white;border:1px solid #e9edf4;border-radius:16px;padding:1rem;box-shadow:var(--shadow)}
+    .card .badge{display:inline-block;font-size:.72rem;background:#eef2ff;color:#2b3a80;border:1px solid #dbe2ff;padding:.25rem .6rem;border-radius:999px}
+    .card h3{margin:.6rem 0 .5rem;font-size:1.1rem}
+    .card p{margin:0;color:#51607a}
+    .card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:.8rem}
+
+    /* Footer */
+    footer{color:#d0daee;padding:2rem 0}
+
+    /* Modals */
+    dialog{border:0;border-radius:18px;max-width:min(900px,92vw);padding:0;box-shadow:var(--shadow)}
+    .modal{padding:1rem}
+    .modal header{position:sticky;top:0;background:white;border-bottom:1px solid #eef2f7;color:var(--ink);border-top-left-radius:18px;border-top-right-radius:18px}
+    .modal header .bar{display:flex;align-items:center;justify-content:space-between;padding:1rem}
+    .modal .body{padding:1rem}
+
+    .form-row{display:grid;grid-template-columns: 1fr 1fr; gap:.8rem}
+    input[type="text"], input[type="number"], input[type="password"], select, textarea{
+      width:100%;border:1px solid #d9e0ea;border-radius:12px;padding:.8rem;font-size:1rem
+    }
+
+    /* Course modal */
+    .course-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:1rem}
+    .player{background:#0b1220;border-radius:14px;position:relative;aspect-ratio:16/9;display:grid;place-items:center;color:#dce5ff}
+    .player .fake-video{display:grid;place-items:center;text-align:center}
+    .player .fake-video .ring{width:80px;height:80px;border-radius:999px;border:6px solid rgba(255,255,255,.2);border-top-color:var(--brand);animation:spin 2s linear infinite;margin-bottom:.6rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .quiz .q{margin:0 0 1rem;padding:1rem;background:#f8fafc;border:1px solid #e7eef7;border-radius:12px}
+    .quiz .q h4{margin:0 0 .5rem}
+    .quiz .q label{display:block;margin:.3rem 0}
+
+    .cert{
+      --w: 1000px; width:min(var(--w), 92vw); background:white;border:3px double #cdd6e6;border-radius:16px;padding:2rem;position:relative
+    }
+    .cert .header{display:flex;align-items:center;gap:1rem;justify-content:space-between}
+    .cert .brand{display:flex;align-items:center;gap:.8rem}
+    .cert .brand .mark{width:48px;height:48px;border-radius:12px;background:radial-gradient(circle at 30% 30%,#ffe8a3,#ffd166 40%,#f4a261 70%,#a96a20 100%)}
+    .cert h3{margin:.6rem 0 0;font-size:1.4rem}
+    .cert .big{font-size:clamp(26px,3.8vw,42px);letter-spacing:.6px;margin:.4rem 0}
+    .cert .row{display:flex;gap:1rem;align-items:center;justify-content:space-between;margin-top:1rem}
+    .cert .qrbox{border:1px solid #e0e6f2;border-radius:10px;padding:8px;background:#fafbff}
+    .cert small{color:#6a7a96}
+    .cert .sign{margin-top:2rem;display:flex;gap:2rem;align-items:center;justify-content:flex-end}
+
+    .hide{display:none !important}
+
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .course-layout{grid-template-columns:1fr}
+      .form-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo" aria-label="EMAECSA">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <div>EMAECSA</div>
+          <small style="opacity:.8">Seguridad y Salud Ocupacional</small>
+        </div>
+      </div>
+      <nav class="actions">
+        <button class="btn ghost" id="btnAdmin">Admin</button>
+        <button class="btn solid" id="btnLogin"><span id="loginLabel">Ingresar con DNI</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container hero">
+    <div>
+      <span class="tag">Plataforma de capacitación • Versión básica</span>
+      <h1>Entrena, evalúa y certifica a tu personal <span style="color:var(--brand)">en minutos</span>.</h1>
+      <p>Este prototipo incluye inicio de sesión por DNI, cursos con video y una evaluación de 5 preguntas. Al aprobar (=80%), el sistema genera un certificado imprimible con código de verificación y un QR representativo.</p>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="btn solid" onclick="document.getElementById('btnLogin').click()">Comenzar ahora</button>
+        <a class="btn ghost" href="#cursos">Ver cursos</a>
+      </div>
+      <p class="muted" style="margin-top:.8rem">¿Quieres colores, logo y textos de tu empresa? Dímelo y lo personalizo.</p>
+    </div>
+    <div class="card">
+      <b>¿Qué trae?</b>
+      <ul>
+        <li>?? Login por DNI (sin contraseñas).</li>
+        <li>?? Módulo de curso con video (YouTube o MP4).</li>
+        <li>?? Evaluación de 5 preguntas con nota automática.</li>
+        <li>??? Certificado imprimible con QR representativo.</li>
+        <li>??? Panel Admin básico (local) para ver resultados.</li>
+      </ul>
+      <small class="muted">Nota: Todo corre 100% en el navegador. Luego podemos conectarlo a una base de datos gratis (Supabase/Firebase) y desplegar en Vercel.</small>
+    </div>
+  </div>
+
+  <section id="cursos">
+    <div class="container">
+      <div class="title">
+        <div>
+          <h2>Cursos disponibles</h2>
+          <div class="muted">Ejemplo 1 listo para usar. Pídeme más y los agrego.</div>
+        </div>
+        <div class="muted">Tu usuario: <b id="whoami">Invitado</b></div>
+      </div>
+
+      <div class="grid" id="courseGrid">
+        <!-- Cursos se inyectan con JS -->
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div style="display:flex;align-items:center;gap:.6rem;color:#e6edf7">
+          <div class="logo"><div class="mark"></div><div>EMAECSA SSO</div></div>
+        </div>
+        <small style="color:#92a2c3">Versión demo local • © <span id="year"></span></small>
+      </div>
+      <div><a class="btn ghost" href="#" onclick="scrollTo(0,0);return false;">? Volver arriba</a></div>
+    </div>
+  </footer>
+
+  <!-- Login Modal -->
+  <dialog id="loginModal">
+    <div class="modal">
+      <header><div class="bar"><strong>Ingresar al sistema</strong><button class="btn ghost" onclick="closeModal('loginModal')">Cerrar</button></div></header>
+      <div class="body">
+        <div class="form-row">
+          <div>
+            <label>DNI</label>
+            <input type="text" id="dniInput" placeholder="Ingresa tu DNI" />
+          </div>
+          <div>
+            <label>Nombre y Apellido (opcional)</label>
+            <input type="text" id="nameInput" placeholder="Para mostrar en el certificado" />
+          </div>
+        </div>
+        <div style="margin-top:1rem;display:flex;gap:.6rem">
+          <button class="btn solid" onclick="doLogin()">Ingresar</button>
+          <button class="btn" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <small class="muted">Tu sesión queda guardada localmente (navegador). Luego podemos conectar a base de datos.</small>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Course Modal -->
+  <dialog id="courseModal">
+    <div class="modal">
+      <header>
+        <div class="bar"><strong id="courseTitle">Curso</strong><button class="btn ghost" onclick="closeModal('courseModal')">Cerrar</button></div>
+      </header>
+      <div class="body">
+        <div class="course-layout">
+          <div>
+            <div class="player">
+              <div class="fake-video">
+                <div class="ring"></div>
+                <div>Video del curso (YouTube/MP4)<br><small style="opacity:.8">(En esta demo usamos un placeholder)</small></div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:1rem">
+              <b>Descripción</b>
+              <p id="courseDesc" class="muted" style="margin-top:.4rem"></p>
+              <div class="muted">Duración estimada: <span id="courseDur"></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card quiz">
+              <b>Evaluación (5 preguntas)</b>
+              <div id="quizBox" style="margin-top:.6rem"></div>
+              <div style="display:flex;gap:.6rem;margin-top:.8rem">
+                <button class="btn solid" onclick="gradeQuiz()">Enviar</button>
+                <button class="btn ghost" onclick="resetQuiz()">Limpiar</button>
+              </div>
+              <div id="quizResult" style="margin-top:.6rem"></div>
+              <button id="btnCert" class="btn" style="margin-top:.6rem" disabled onclick="openCert()">Generar certificado</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Certificate Modal -->
+  <dialog id="certModal">
+    <div class="modal">
+      <header><div class="bar"><strong>Certificado</strong>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn ghost" onclick="printCert()">Imprimir / PDF</button>
+          <button class="btn ghost" onclick="closeModal('certModal')">Cerrar</button>
+        </div>
+      </div></header>
+      <div class="body">
+        <div class="cert" id="cert">
+          <div class="header">
+            <div class="brand"><div class="mark"></div><div>
+              <div style="font-weight:700;letter-spacing:.4px">EMAECSA</div>
+              <small>Seguridad y Salud Ocupacional</small>
+            </div></div>
+            <div style="text-align:right">
+              <small>Código de verificación</small>
+              <div id="certCode" style="font-weight:700">–</div>
+            </div>
+          </div>
+          <h3>Constancia de Capacitación</h3>
+          <div class="big" id="certCourse">Curso</div>
+          <p>Se certifica que <b id="certName">Participante</b> con DNI <b id="certDni">00000000</b> aprobó la evaluación del curso con una calificación de <b id="certScore">0</b> / 100.</p>
+          <div class="row">
+            <div>
+              <small>Fecha de emisión</small>
+              <div id="certDate">–</div>
+              <small style="display:block;margin-top:.6rem">Válido por 12 meses</small>
+            </div>
+            <div class="qrbox">
+              <canvas id="qr" width="140" height="140" aria-label="QR representativo"></canvas>
+            </div>
+          </div>
+          <div class="sign">
+            <div>
+              <div style="width:180px;height:1px;background:#c9d3e8"></div>
+              <small>Responsable SSO</small>
+            </div>
+          </div>
+          <small>Nota: El QR es representativo para la demo. Luego podemos generar QR reales con verificación online.</small>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Admin Modal (simple local viewer) -->
+  <dialog id="adminModal">
+    <div class="modal">
+      <header><div class="bar"><strong>Panel Admin (demo local)</strong><button class="btn ghost" onclick="closeModal('adminModal')">Cerrar</button></div></header>
+      <div class="body">
+        <div class="card">
+          <b>Resultados guardados en este navegador</b>
+          <div id="adminTable" style="margin-top:.6rem"></div>
+          <small class="muted">Para producción, conectaremos una base de datos (Supabase/Firebase) y autenticación.</small>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+  const $ = (s) => document.querySelector(s);
+  const state = {
+    user: null,
+    currentCourse: null,
+    score: 0,
+  };
+
+  const COURSES = [
+    {
+      id: 'induccion-minera',
+      title: 'Inducción Minera Subterránea',
+      level: 'Obligatorio',
+      duration: '25 min',
+      desc: 'Principios de seguridad en operaciones subterráneas: EPP, rutas de evacuación, comunicación, y respuesta ante emergencia (sismo/caída de planchón).',
+      quiz: [
+        {q:'¿Cuál es el EPP mínimo para ingresar a mina subterránea?', opts:['Casco, lentes, respirador, guantes, botas','Solo casco y chaleco','Casco y lentes','Lentes y tapones'], a:0},
+        {q:'Ante sismo dentro de la labor, ¿qué acción es correcta?', opts:['Salir corriendo a la bocamina','Refugiarse en zona segura señalizada y esperar indicaciones','Usar la wincha para subir más rápido','Apagar las luces del equipo'], a:1},
+        {q:'La “caída de planchón” se previene principalmente con…', opts:['Mayor ventilación','Sostenimiento adecuado y control geomecánico','Más iluminación','Uso de mascarilla N95'], a:1},
+        {q:'En caso de fuga de cianuro en planta, ¿qué NO debe hacerse?', opts:['Avisar de inmediato y activar el plan de emergencias','Usar EPP químico y acudir equipo HAZMAT','Neutralizar con hipoclorito sin entrenamiento','Aislar el área y evacuar no esenciales'], a:2},
+        {q:'El reporte de acto/condición subestándar debe realizarse…', opts:['Solo si hay accidente','Diariamente','Cuando el jefe lo pida','Al finalizar el mes'], a:1},
+      ]
+    },
+    {
+      id: 'trabajos-en-altura',
+      title: 'Trabajos en altura',
+      level: 'Recomendado',
+      duration: '18 min',
+      desc: 'Control de caídas, inspección de líneas de vida y anclajes, check-list previo.',
+      quiz: [
+        {q:'El arnés debe conectarse al…', opts:['Punto de anclaje certificado','Cualquier baranda','Cinturón','Mosquetón abierto'], a:0},
+        {q:'Antes de usar una línea de vida, se debe…', opts:['Pintarla','Inspeccionarla visual y táctilmente','Compartirla con otro trabajador','Doblarla varias veces'], a:1},
+        {q:'El plan de rescate debe…', opts:['Improvisarse','Existir y ser conocido por todos','No es necesario','Solo el supervisor lo sabe'], a:1},
+        {q:'La baranda perimetral debe tener altura mínima de…', opts:['0.5 m','1.1 m','2 m','0.8 m'], a:1},
+        {q:'Los puntos de anclaje deben soportar…', opts:['Cualquier peso','Al menos 15 kN','2 kN','No importa'], a:1},
+      ]
+    },
+    {
+      id: 'sismo-oficinas',
+      title: 'Sismo en oficinas',
+      level: 'Obligatorio',
+      duration: '10 min',
+      desc: 'Protocolo “Agáchate, Cúbrete y Agárrate”, evacuación y punto de encuentro en áreas administrativas.',
+      quiz: [
+        {q:'Durante un sismo en oficina se debe…', opts:['Correr a la salida','Agacharse, cubrirse y agarrarse','Usar ascensores','Romper ventanas'], a:1},
+        {q:'Tras el sismo, se evacúa hacia…', opts:['Cualquier lugar','El punto de encuentro establecido','El estacionamiento','La cafetería'], a:1},
+        {q:'Quién autoriza el reingreso…', opts:['Cualquiera','El jefe de brigada y/o autoridad competente','El primero que llegue','Seguridad patrimonial'], a:1},
+        {q:'El botiquín debe estar…', opts:['Oculto','Señalizado y accesible','Cerrado con 3 candados','Solo en gerencia'], a:1},
+        {q:'El simulacro debe registrarse en…', opts:['No se registra','Formato de simulacro y acta','Un WhatsApp','Solo memoria'], a:1},
+      ]
+    }
+  ];
+
+  // --- Utils ---
+  function openModal(id){const d=document.getElementById(id); d.showModal?.()}
+  function closeModal(id){const d=document.getElementById(id); d.close?.()}
+  function saveLocal(k,v){localStorage.setItem(k,JSON.stringify(v))}
+  function loadLocal(k,fb=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{ return fb}}
+
+  // --- Login ---
+  function doLogin(){
+    const dni = $('#dniInput').value.trim();
+    const name = $('#nameInput').value.trim() || 'Participante';
+    if(!/^\d{8}$/.test(dni)) { alert('Ingresa un DNI válido de 8 dígitos'); return; }
+    state.user = {dni, name};
+    saveLocal('user', state.user);
+    $('#whoami').textContent = `${name} (${dni})`;
+    $('#loginLabel').textContent = 'Sesión iniciada';
+    closeModal('loginModal');
+  }
+  function logout(){
+    state.user = null; localStorage.removeItem('user');
+    $('#whoami').textContent = 'Invitado';
+    $('#loginLabel').textContent = 'Ingresar con DNI';
+  }
+
+  // --- Render courses ---
+  function renderCourses(){
+    const grid = $('#courseGrid'); grid.innerHTML = '';
+    COURSES.forEach(c=>{
+      const card = document.createElement('div'); card.className='card';
+      card.innerHTML = `
+        <span class='badge'>${c.level}</span>
+        <h3>${c.title}</h3>
+        <p>${c.desc}</p>
+        <div class='meta'>
+          <small class='muted'>? ${c.duration}</small>
+          <button class='btn solid'>Iniciar</button>
+        </div>`;
+      card.querySelector('button').addEventListener('click', ()=> openCourse(c));
+      grid.appendChild(card);
+    })
+  }
+
+  // --- Course / Quiz ---
+  function openCourse(c){
+    state.currentCourse = c;
+    $('#courseTitle').textContent = c.title;
+    $('#courseDesc').textContent = c.desc;
+    $('#courseDur').textContent = c.duration;
+    const qb = $('#quizBox'); qb.innerHTML='';
+    c.quiz.forEach((item,idx)=>{
+      const q = document.createElement('div'); q.className='q';
+      q.innerHTML = `<h4>${idx+1}. ${item.q}</h4>` +
+        item.opts.map((op,i)=>`<label><input type='radio' name='q${idx}' value='${i}'> ${op}</label>`).join('');
+      qb.appendChild(q);
+    });
+    $('#quizResult').innerHTML='';
+    $('#btnCert').disabled = true;
+    openModal('courseModal');
+  }
+  function resetQuiz(){
+    if(!state.currentCourse) return;
+    openCourse(state.currentCourse);
+  }
+  function gradeQuiz(){
+    const c = state.currentCourse; if(!c) return;
+    let ok=0;
+    c.quiz.forEach((item,idx)=>{
+      const sel = document.querySelector(`input[name='q${idx}']:checked`);
+      const ans = sel? parseInt(sel.value,10) : -1;
+      if(ans===item.a) ok++;
+    });
+    const score = Math.round((ok / c.quiz.length) * 100);
+    state.score = score;
+    const pass = score >= 80;
+    $('#quizResult').innerHTML = pass
+      ? `<div style='color:var(--ok);font-weight:700'>? Aprobado: ${score}/100</div>`
+      : `<div style='color:var(--danger);font-weight:700'>? Desaprobado: ${score}/100 (mínimo 80)</div>`;
+    $('#btnCert').disabled = !pass || !state.user;
+    if(!state.user && pass){
+      $('#quizResult').innerHTML += `<div class='muted'>Inicia sesión con tu DNI para generar tu certificado.</div>`;
+    }
+    // guardar resultado local
+    if(state.user){
+      const key = 'results';
+      const data = loadLocal(key,{});
+      data[state.user.dni] = data[state.user.dni] || {};
+      data[state.user.dni][c.id] = { score, when: new Date().toISOString(), name: state.user.name, title: c.title };
+      saveLocal(key,data);
+    }
+  }
+
+  // --- Certificate ---
+  function openCert(){
+    if(!state.user || !state.currentCourse) { alert('Falta usuario o curso'); return; }
+    const {dni,name} = state.user; const c = state.currentCourse; const score = state.score;
+    const code = makeCode(`${dni}-${c.id}-${score}-${new Date().toISOString().slice(0,10)}`);
+    $('#certCourse').textContent = c.title;
+    $('#certName').textContent = name;
+    $('#certDni').textContent = dni;
+    $('#certScore').textContent = score;
+    $('#certDate').textContent = new Date().toLocaleDateString();
+    $('#certCode').textContent = code;
+    drawQR('#qr', `${dni}-${c.id}-${score}`);
+    openModal('certModal');
+  }
+  function printCert(){
+    window.print();
+  }
+  function makeCode(s){
+    // Simple hash ? código corto
+    let h=0; for(let i=0;i<s.length;i++){h = (h<<5) - h + s.charCodeAt(i); h|=0}
+    const ab = Math.abs(h).toString(36).toUpperCase();
+    return `EM-${ab.slice(0,4)}-${ab.slice(4,8)}`;
+  }
+  function drawQR(selector, seedStr){
+    // QR representativo: patrón pseudo-aleatorio en cuadrícula 21x21 (NO es QR real)
+    const cvs = document.querySelector(selector); const ctx = cvs.getContext('2d');
+    const N=21, m = 6; // margen
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    // fondo
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,cvs.width,cvs.height);
+    const cell = (cvs.width - 2*m)/N;
+    // hash seed
+    let seed = 0; for(let i=0;i<seedStr.length;i++){ seed = (seed*131 + seedStr.charCodeAt(i))>>>0 }
+    function rnd(){ seed = (1664525*seed + 1013904223)>>>0; return seed/4294967296 }
+    // finder-like squares
+    function finder(x,y){ ctx.strokeStyle='#0b1220'; ctx.lineWidth=2; ctx.strokeRect(m+x*cell, m+y*cell, cell*7, cell*7); ctx.fillStyle='#0b1220'; ctx.fillRect(m+(x+2)*cell, m+(y+2)*cell, cell*3, cell*3) }
+    finder(0,0); finder(N-7,0); finder(0,N-7);
+    // random modules
+    for(let y=0;y<N;y++){
+      for(let x=0;x<N;x++){
+        // evita solapar los "finder"
+        const inFinder = (x<7 && y<7) || (x>=N-7 && y<7) || (x<7 && y>=N-7);
+        if(inFinder) continue;
+        if(rnd()>.62) { ctx.fillStyle='#0b1220'; ctx.fillRect(m+x*cell, m+y*cell, Math.ceil(cell), Math.ceil(cell)); }
+      }
+    }
+  }
+
+  // --- Admin viewer ---
+  function openAdmin(){
+    const data = loadLocal('results',{});
+    const box = $('#adminTable');
+    const rows = [];
+    Object.entries(data).forEach(([dni, courses])=>{
+      Object.values(courses).forEach(r=>{
+        rows.push(`<tr><td>${dni}</td><td>${r.name}</td><td>${r.title}</td><td>${new Date(r.when).toLocaleString()}</td><td style='text-align:right'>${r.score}</td></tr>`)
+      })
+    })
+    box.innerHTML = rows.length ? `
+      <div style='overflow:auto'>
+        <table style='border-collapse:collapse;width:100%'>
+          <thead>
+            <tr style='background:#f2f5fb'>
+              <th style='text-align:left;padding:.6rem;border:1px solid #e4e9f4'>DNI</th>
+              <th style='text-align:left;padding:.6rem;border:1px solid #e4e9f4'>Nombre</th>
+              <th style='text-align:left;padding:.6rem;border:1px solid #e4e9f4'>Curso</th>
+              <th style='text-align:left;padding:.6rem;border:1px solid #e4e9f4'>Fecha</th>
+              <th style='text-align:right;padding:.6rem;border:1px solid #e4e9f4'>Puntaje</th>
+            </tr>
+          </thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>
+      </div>
+    `: '<div class="muted">Sin resultados aún</div>';
+    openModal('adminModal');
+  }
+
+  // --- Events ---
+  document.addEventListener('DOMContentLoaded', ()=>{
+    $('#year').textContent = new Date().getFullYear();
+    const u = loadLocal('user'); if(u){ state.user = u; $('#whoami').textContent = `${u.name} (${u.dni})`; $('#loginLabel').textContent='Sesión iniciada'; }
+    renderCourses();
+    $('#btnLogin').addEventListener('click', ()=> openModal('loginModal'));
+    $('#btnAdmin').addEventListener('click', openAdmin);
+  });
+  </script>
+</body>
+</html>
